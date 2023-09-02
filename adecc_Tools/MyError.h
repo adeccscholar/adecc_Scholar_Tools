@@ -1,7 +1,7 @@
 ﻿#pragma once
 
 #include <string>
-#include <utility>
+#include <tuple>
 
 /// enum with error types for MyErrorInfo
 enum class EMyErrorType : int { noError = 0,   ///< no error 
@@ -14,4 +14,4 @@ enum class EMyErrorType : int { noError = 0,   ///< no error
                                };
 
 /// type for unexpected returns of functions
-using MyErrorInfo = std::pair<EMyErrorType, std::string>;
+using MyErrorInfo = std::tuple<EMyErrorType, std::string, std::string>;
