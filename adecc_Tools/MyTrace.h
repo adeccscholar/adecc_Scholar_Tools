@@ -1,14 +1,23 @@
 #pragma once
 
+#if __has_include("MyError.h") 
+   #include "MyError.h"
+#else
+   #include "adecc_Tools/MyError.h"
+#endif
+
+
 #include <iostream>
 #include <string>
 #include <source_location>
 #include <chrono>
 
+using namespace std::string_literals;
+
 #if defined WITH_TRACE
-const bool ShouldTrace = true;
+  const bool ShouldTrace = true;
 #else
-const bool ShouldTrace = false;
+  const bool ShouldTrace = false;
 #endif	
 
 inline std::string MyTimeStamp(std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now()) {
@@ -18,9 +27,23 @@ inline std::string MyTimeStamp(std::chrono::time_point<std::chrono::system_clock
    }
 
 inline std::string MyPosition(std::source_location loc = std::source_location::current()) {
-
    return std::format("[in function \"{}\" in file \"{}\" at line {}]", loc.function_name(), loc.file_name(), loc.line());
    }
+
+
+inline MyErrorInfo&& AddTrace(MyErrorInfo&& err_info, std::string const& text, std::ostream& out = std::cerr,
+   std::source_location loc = std::source_location::current(),
+   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now()) {
+   get<2>(err_info) += "\n"s + std::format("{}: {} {}\n", MyTimeStamp(now), text, MyPosition(loc));
+   return std::move(err_info);
+   }
+
+inline MyErrorInfo& AddTrace(MyErrorInfo& err_info, std::string const& text, std::ostream& out = std::cerr,
+   std::source_location loc = std::source_location::current(),
+   std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now()) {
+   get<2>(err_info) += "\n"s + std::format("{}: {} {}\n", MyTimeStamp(now), text, MyPosition(loc));
+   return err_info;
+}
 
 
 template <bool boTrace = ShouldTrace>
