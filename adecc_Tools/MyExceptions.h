@@ -84,18 +84,21 @@ public:
    TMy_UserBreak(std::string const& msg) : std::runtime_error(msg) { }
 };
 
-class TMy_RuntimeError : public TMyExceptionInformation, public std::runtime_error {
+template <typename ty>
+class TMy_StandardError : public TMyExceptionInformation, public ty {
 private:
    mutable std::string strMessage; ///< Hilfsviable um Speicherdauer der Rückgabe sicherzustellen
 public:
-   TMy_RuntimeError(std::string strMsg, src_loc const& loc = src_loc::current(), 
-                    time_stamp timepoint = std::chrono::system_clock::now()) :
+   TMy_StandardError(std::string strMsg, src_loc const& loc = src_loc::current(), 
+                     time_stamp timepoint = std::chrono::system_clock::now()) :
          TMyExceptionInformation(timepoint, loc), 
-         std::runtime_error(strMsg + TimePosition(timepoint, loc)) { }
-   TMy_RuntimeError(TMy_RuntimeError const& ref) : TMyExceptionInformation(ref), std::runtime_error(ref) { }
+         ty(strMsg) { }
+   TMy_StandardError(TMy_StandardError const& ref) : TMyExceptionInformation(ref), ty(ref) { }
 
    const char* what() const noexcept override {
-      strMessage = std::format("{}\n{}", std::runtime_error::what(), TimePosition());
+      strMessage = std::format("{}\n{}", typename ty::what(), TimePosition());
       return strMessage.c_str();
       }
 };
+
+using TMy_RuntimeError = TMy_StandardError<std::runtime_error>;
