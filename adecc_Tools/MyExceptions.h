@@ -9,6 +9,7 @@
 #include <typeinfo>
 #include <filesystem>
 
+using namespace std::string_literals;
 namespace fs = std::filesystem;
 
 using src_loc    = std::source_location;
@@ -35,8 +36,8 @@ private:
    time_stamp the_timepoint;
    src_loc    the_location;
 public:
-   TMyExceptionInformation(time_stamp const& timept = std::chrono::system_clock::now(), src_loc const& loc = src_loc::current()) :
-      the_timepoint(timept), the_location(loc) {}
+   TMyExceptionInformation(src_loc const& loc = src_loc::current(), time_stamp const& timept = std::chrono::system_clock::now()) 
+         : the_timepoint(timept), the_location(loc) {}
 
    TMyExceptionInformation(TMyExceptionInformation const& ref) :
       the_timepoint(ref.the_timepoint), the_location(ref.the_location) {}
@@ -44,6 +45,11 @@ public:
    TMyExceptionInformation(TMyExceptionInformation&& ref) noexcept { swap(ref); }
 
    virtual ~TMyExceptionInformation() = default;
+
+   void copy(TMyExceptionInformation const& ref) {
+      the_timepoint = ref.the_timepoint;
+      the_location  = ref.the_location;
+      }
 
    void swap(TMyExceptionInformation& ref) noexcept {
       using std::swap;
@@ -58,8 +64,9 @@ public:
    std::string TimePosition() const { return TimePosition(the_timepoint, the_location); }
    std::string Time() const { return Time(the_timepoint); }
    std::string Position() const { return Position(the_location); }
+   std::string FilePosition() const { return FilePosition(the_location); }
 
-   static std::string cutPath(const std::string& pathString) {
+   static std::string cutPath(std::string const& pathString) {
       //if (fs::path path(pathString);  true) { 
       if (fs::path path(pathString);  fs::is_regular_file(path)) {
          std::vector<std::string> parts;
@@ -111,9 +118,10 @@ public:
    TMy_UserBreak(std::string const& msg) : std::runtime_error(msg) { }
 };
 
+
 template <typename ty>
-concept MyWrappedException = std::is_base_of_v<std::runtime_error, ty> || std::is_same_v<std::runtime_error, ty> &&
-   requires(ty t, ty const& t_ref, const std::string & str, const char* c) {
+concept MyWrappedException = std::is_base_of_v<std::exception, ty> &&
+   requires(ty t, ty const& t_ref, std::string const& str, const char* c) {
       { ty(t_ref) } -> std::convertible_to<ty>;
       { ty(str) }   -> std::convertible_to<ty>;
       { ty(c) }     -> std::convertible_to<ty>;
@@ -122,13 +130,13 @@ concept MyWrappedException = std::is_base_of_v<std::runtime_error, ty> || std::i
 
 template <MyWrappedException ty>
 class TMy_StandardError : public TMyExceptionInformation, public ty {
-private:
+protected:
    using used_exception_type = ty;
    mutable std::string strMessage; ///< Hilfsviable um Speicherdauer der Rückgabe sicherzustellen
 public:
    TMy_StandardError(std::string const& strMsg, src_loc const& loc = src_loc::current(), 
                      time_stamp timepoint = std::chrono::system_clock::now()) :
-         TMyExceptionInformation(timepoint, loc), ty(strMsg) { }
+         TMyExceptionInformation(loc, timepoint), ty(strMsg) { }
    TMy_StandardError(TMy_StandardError const& ref) : TMyExceptionInformation(ref), ty(ref) { }
 
    const char* what() const noexcept override {
