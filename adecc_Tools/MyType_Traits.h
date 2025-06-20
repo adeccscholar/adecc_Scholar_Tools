@@ -12,12 +12,15 @@
 template<typename ty>
 struct dependent_false : std::false_type {};
 
+*/
+
 template <typename ty>
 struct is_optional : std::false_type {};
 
 template <typename ty>
 struct is_optional<std::optional<ty>> : std::true_type {};
-*/
+
+
 template <typename ty>
 struct is_myIntegral {
    static constexpr bool value = std::is_integral<ty>::value && !std::is_same<bool, ty>::value;
