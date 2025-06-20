@@ -8,11 +8,20 @@
 #include <set>
 #include <map>
 #include <concepts>
-/*
+
 template<typename ty>
 struct dependent_false : std::false_type {};
 
-*/
+
+template<bool flag = false>
+void static_assert_no_match() {
+   static_assert(flag, "no match for if constexpr found");
+   }
+
+template<bool flag = false>
+void static_assert_no_supported() {
+   static_assert(flag, "this type isn't supported");
+   }
 
 template <typename ty>
 struct is_optional : std::false_type {};
